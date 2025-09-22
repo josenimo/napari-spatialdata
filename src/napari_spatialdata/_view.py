@@ -466,12 +466,19 @@ class QtAdataViewWidget(QWidget):
             self.adata_layer_widget.addItem("X", None)
             self.adata_layer_widget.addItems(self._get_adata_layer())
 
+        # Create the search bar (QLineEdit)
+        self.var_search_bar = QLineEdit()
+        self.var_search_bar.setPlaceholderText("Search for a var...")
+
         self.adata_layer_widget.currentTextChanged.connect(self.var_widget.setAdataLayer)
 
         self.layout().addWidget(adata_layer_label)
         self.layout().addWidget(self.adata_layer_widget)
         self.layout().addWidget(var_label)
+        self.layout().addWidget(self.var_search_bar)
         self.layout().addWidget(self.var_widget)
+
+        self.var_search_bar.textChanged.connect(self.filter_list)
 
         # obsm
         obsm_label = QLabel("Obsm:")
@@ -509,6 +516,14 @@ class QtAdataViewWidget(QWidget):
 
         self.model.events.adata.connect(self._on_layer_update)
         self.model.events.color_by.connect(self._change_color_by)
+
+    def filter_list(self, text: str) -> None:
+        self.var_widget.clear()  # Clear existing items
+        search_text = text.lower()  # Get the search text and convert to lowercase
+
+        for item in self.var_widget.items:
+            if search_text in item.lower():
+                self.var_widget.addItem(item)
 
     def _channel_changed(self, event: Event) -> None:
         layer = self.model.layer

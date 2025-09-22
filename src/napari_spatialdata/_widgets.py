@@ -84,7 +84,8 @@ class ListWidget(QtWidgets.QListWidget):
 
         if len(labels):
             super().addItems(labels)
-            self.sortItems(QtCore.Qt.AscendingOrder)
+            self.sortItems(QtCore.Qt.AscendingOrder) # comment out to stop sorting
+            # perhaps we should have a boolean to choose for which lists we want to sort
 
     def keyPressEvent(self, event: QtCore.QEvent) -> None:
         if event.key() == QtCore.Qt.Key_Return:
@@ -104,6 +105,7 @@ class AListWidget(ListWidget):
 
         self._viewer = viewer
         self._model = model
+        self.items: list[str] = []
 
         self._attr = attr
 
@@ -118,7 +120,10 @@ class AListWidget(ListWidget):
     def _onChange(self) -> None:
         self.clear()
         if self._model.adata is not None:
-            self.addItems(self.model.get_items(self._attr))
+            self.items = self.model.get_items(self._attr)
+            self.addItems(self.items)
+        else:
+            self.items = []
 
     def _onAction(self, items: Iterable[str]) -> None:
         for item in sorted(set(items)):
@@ -347,7 +352,7 @@ class ComponentWidget(QtWidgets.QComboBox):
             try:
                 key = texts.text()
                 if isinstance(self._model.adata.obsm[key], pd.DataFrame):
-                    texts = sorted(self._model.adata.obsm[key].select_dtypes(include=[np.number, "category"]).columns)
+                    texts = sorted(self._model.adata.obsm[key].select_dtypes(include=[np.number, "category"])).columns
                 elif hasattr(self._model.adata.obsm[key], "shape"):
                     texts = self._model.adata.obsm[key].shape[1]
                 else:
@@ -572,7 +577,7 @@ class RangeSliderWidget(QRangeSlider):
             layer.refresh()
 
         self._colorbar.setOclim(layer.metadata["minmax"])
-        self._colorbar.setClim((np.min(layer.properties["value"]), np.max(layer.properties["value"])))
+        self._colorbar.setClim((np.min(layer.properties["value"])), np.max(layer.properties["value"]))
         self._colorbar.update_color()
 
     def _scale_vec(self, vec: ArrayLike) -> ArrayLike:
